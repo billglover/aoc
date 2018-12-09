@@ -19,7 +19,7 @@ func TestHighScore(t *testing.T) {
 	for _, tc := range testCases {
 		score := highScore(tc.players, tc.marbles)
 		if score != tc.score {
-			t.Errorf("got %d, want %d", score, tc.score)
+			t.Errorf("players: %d, marbles: %d - got %d, want %d", tc.players, tc.marbles, score, tc.score)
 		}
 	}
 }
