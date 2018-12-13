@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-const generations = 20
+const generations = 50000000000
 
 type rules map[string]string
 
 func main() {
 	// open file
-	f, err := os.Open("test.txt")
+	f, err := os.Open("input.txt")
 	if err != nil {
 		fmt.Println("unable to open file:", err)
 		os.Exit(1)
@@ -44,7 +44,20 @@ func main() {
 	}
 
 	// match positions
+	d0, d1, d2 := 0, -1, -2
+	s0, s1 := 0, 0
 	for i := 0; i < generations; i++ {
+		if d0 == d1 && d1 == d2 {
+			s0 += d0
+			// fmt.Print("-")
+			// fmt.Println("scores:", s0, s1)
+			// fmt.Print("-")
+			// fmt.Println("deltas:", d0, d1, d2)
+			continue
+		}
+		s1 = s0
+		d2, d1 = d1, d0
+
 		pots := make([]string, len(t.pots)+11)
 		for n := -5; n <= len(t.pots)+5; n++ {
 			k := t.neighbours(n)
@@ -57,9 +70,12 @@ func main() {
 
 		t = newArrangement(strings.Join(pots, ""), 5)
 		t.trim()
-		if i%100000 == 0 {
-			fmt.Println("iter:", i)
-		}
+
+		s0 = t.score()
+		d0 = s0 - s1
+		// fmt.Println("scores:", s0, s1)
+		// fmt.Println("deltas:", d0, d1, d2)
 	}
-	fmt.Println("Table:", t.score())
+	fmt.Println("---")
+	fmt.Println("Total:", s0)
 }
