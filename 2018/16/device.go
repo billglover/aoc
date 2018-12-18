@@ -2,6 +2,8 @@ package device
 
 import (
 	"bufio"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -104,6 +106,44 @@ func LoadInstructions() map[string]Opcode {
 	return Instructions
 }
 
+// RunProgram takes a file name and exucutes the program.
+func RunProgram(path string, ins map[int]Opcode) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	Reg = [4]int{0, 0, 0, 0}
+
+	lines := strings.Split(string(data), "\n")
+	for _, l := range lines {
+		id, a, b, c := 0, 0, 0, 0
+		fmt.Sscanf(l, "%d %d %d %d", &id, &a, &b, &c)
+
+		s := Sample{
+			Before:      Reg,
+			Instruction: [4]int{id, a, b, c},
+		}
+
+		op := ins[id]
+		op.Do(a, b, c)
+
+		s.After = Reg
+	}
+
+	err = f.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ReadSamples takes a file name and returns a slice of samples.
 func ReadSamples(path string) ([]Sample, error) {
 
@@ -112,9 +152,9 @@ func ReadSamples(path string) ([]Sample, error) {
 		return nil, err
 	}
 
-	reBefore := regexp.MustCompile(`^Before:\s+\[(\d)+,\s?(\d)+,\s?(\d)+,\s?(\d)+\]$`)
-	reInstruction := regexp.MustCompile(`^(\d)+\s?(\d)+\s?(\d)+\s?(\d)+$`)
-	reAfter := regexp.MustCompile(`^After:\s+\[(\d)+,\s?(\d)+,\s?(\d)+,\s?(\d)+\]$`)
+	reBefore := regexp.MustCompile(`^Before:\s+\[(\d+),\s?(\d+),\s?(\d+),\s?(\d+)\]$`)
+	reInstruction := regexp.MustCompile(`^(\d+)\s?(\d+)\s?(\d+)\s?(\d+)$`)
+	reAfter := regexp.MustCompile(`^After:\s+\[(\d+),\s?(\d+),\s?(\d+),\s?(\d+)\]$`)
 
 	samples := []Sample{}
 	s := Sample{}
