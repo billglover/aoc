@@ -1,7 +1,7 @@
 package ampcircuit
 
 import (
-	"github.com/billglover/aoc/2019/07/intcode"
+	"github.com/billglover/aoc/2019/intcode"
 )
 
 // Perm generates all the permutations of a slice of ints. Alogirthm inspired
@@ -31,28 +31,79 @@ func perm(k int, a []int, f func([]int)) {
 	}
 }
 
-func Amplify(p []int, phase []int) (int, error) {
-	signal, inPhase := 0, phase[0]
+func Amplify(p []int, phase []int, partB bool) (int, error) {
+	inChans := make([]chan int, len(phase))
+	outChans := make([]chan int, len(phase))
+	doneChans := make([]chan bool, len(phase))
+	out := make(chan int, 1)
 
 	for s := 0; s < len(phase); s++ {
-		inPhase = phase[s]
-		in := []int{inPhase, signal}
-
-		out, err := intcode.Run(intcode.Mem(p), in)
-		if err != nil {
-			return signal, err
+		m := make([]int, len(p))
+		copy(m, p)
+		if inChans[s] == nil {
+			inChans[s] = make(chan int, 1)
 		}
-		signal = out[0]
+		ph := phase[s]
+		in := inChans[s]
+		outChans[s], doneChans[s] = intcode.Run(intcode.Mem(m), in)
+		in <- ph
 	}
+
+	go func() {
+		for v := range outChans[0] {
+			inChans[1] <- v
+		}
+	}()
+
+	go func() {
+		for v := range outChans[1] {
+			inChans[2] <- v
+		}
+	}()
+
+	go func() {
+		for v := range outChans[2] {
+			inChans[3] <- v
+		}
+	}()
+
+	go func() {
+		for v := range outChans[3] {
+			inChans[4] <- v
+		}
+	}()
+
+	if partB {
+		go func() {
+			defer close(out)
+			for v := range outChans[4] {
+				out <- v
+				inChans[0] <- v
+			}
+		}()
+	}
+
+	inChans[0] <- 0
+
+	if !partB {
+		signal := <-outChans[4]
+		return signal, nil
+	}
+
+	signal := 0
+	for v := range out {
+		signal = v
+	}
+
 	return signal, nil
 }
 
-func MaxAmplify(p []int, phases [][]int) (int, []int, error) {
+func MaxAmplify(p []int, phases [][]int, partB bool) (int, []int, error) {
 	maxSignal := 0
 	atPhase := make([]int, len(phases[0]))
 
 	for _, phase := range phases {
-		signal, err := Amplify(p, phase)
+		signal, err := Amplify(p, phase, partB)
 		if err != nil {
 			return maxSignal, atPhase, err
 		}
