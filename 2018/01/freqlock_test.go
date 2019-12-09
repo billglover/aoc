@@ -1,13 +1,10 @@
-package freqlock_test
+package freqlock
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/billglover/aoc/2018/01/freqlock"
 )
 
 var lockCases = []struct {
@@ -24,7 +21,7 @@ var lockCases = []struct {
 func TestLockFreq(t *testing.T) {
 	for _, tc := range lockCases {
 		r := strings.NewReader(strings.Replace(tc.input, " ", "\n", -1))
-		f, err := freqlock.LockFreq(r, tc.initial)
+		f, err := LockFreq(r, tc.initial)
 		if err != nil {
 			t.Error("unexpected error returned:", err)
 		}
@@ -51,7 +48,7 @@ var repeatCases = []struct {
 func TestRepeatedFreq(t *testing.T) {
 	for _, tc := range repeatCases {
 		r := strings.NewReader(strings.Replace(tc.input, " ", "\n", -1))
-		f, err := freqlock.RepeatedFreq(r, tc.initial)
+		f, err := RepeatedFreq(r, tc.initial)
 		if err != nil {
 			t.Error("unexpected error returned:", err)
 		}
@@ -73,7 +70,7 @@ func TestAoCSolution(t *testing.T) {
 		t.Fatal("unable to open file:", err)
 	}
 
-	result, err := freqlock.LockFreq(f, 0)
+	result, err := LockFreq(f, 0)
 	if err != nil {
 		t.Error("unable to determine final frequency:", err)
 	}
@@ -81,7 +78,7 @@ func TestAoCSolution(t *testing.T) {
 
 	f.Seek(0, 0)
 
-	result, err = freqlock.RepeatedFreq(f, 0)
+	result, err = RepeatedFreq(f, 0)
 	if err != nil {
 		t.Error("unable to determine repeated frequency:", err)
 	}
@@ -94,9 +91,4 @@ func TestAoCSolution(t *testing.T) {
 	}
 }
 
-var aoc bool
-
-func init() {
-	flag.BoolVar(&aoc, "aoc", false, "run tests against Accent on Code input")
-	flag.Parse()
-}
+var aoc bool = true
